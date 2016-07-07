@@ -112,17 +112,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     K0A, K0B, K0C, NO,       NO,  K0G, NO,            NO,  K0L, K0M, K0N,      K0P, K0Q, K0R  \
 )
 
-#if defined(LAYOUT_7BIT)
-    #include "keymap_7bit.h"
-#elif defined(LAYOUT_ISO_150)
-    #include "keymap_iso_150.h"
-#elif defined(LAYOUT_ISO)
-    #include "keymap_iso.h"
-#elif defined(LAYOUT_ANSI_150)
-    #include "keymap_ansi_150.h"
-#else
-    #include "keymap_ansi.h"
-#endif
+// #if defined(LAYOUT_7BIT)
+//     #include "keymap_7bit.h"
+// #elif defined(LAYOUT_ISO_150)
+//     #include "keymap_iso_150.h"
+// #elif defined(LAYOUT_ISO)
+//     #include "keymap_iso.h"
+// #elif defined(LAYOUT_ANSI_150)
+//     #include "keymap_ansi_150.h"
+// #else
+//     #include "keymap_ansi.h"
+// #endif
+
+
+enum macro_id {
+    HELLO,
+};
+
+// Phantom ANSI
+static const uint8_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+    /* 0: qwerty */
+    KEYMAP_ANSI(\
+        ESC,      F1,  F2,  F3,  F4,  F5,  F6,  F7,  F8,  F9,  F10, F11, F12,       PSCR,SLCK,PAUS,  \
+        GRV, 1,   2,   3,   4,   5,   6,   7,   8,   9,   0,   MINS,EQL, BSPC,      INS, HOME,PGUP, \
+        TAB, Q,   W,   E,   R,   T,   Y,   U,   I,   O,   P,   LBRC,RBRC,BSLS,      DEL, END, PGDN, \
+        FN0, A,   S,   D,   F,   G,   H,   J,   K,   L,   SCLN,QUOT,     ENT,                       \
+        LSFT,     Z,   X,   C,   V,   B,   N,   M,   COMM,DOT, SLSH,     RSFT,           UP,        \
+        LCTL,LALT,LGUI,               SPC,                RALT,RGUI,APP, RCTL,      LEFT,DOWN,RGHT),
+    /* 1: media keys */
+    KEYMAP_ANSI(\
+        TRNS,     TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,      TRNS,TRNS,SLEP, \
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,MUTE,VOLD,VOLU,TRNS,      TRNS,TRNS,TRNS, \
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,UP  ,MSTP,MPLY,MPRV,MNXT,MSEL,      TRNS,TRNS,TRNS, \
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,FN1 ,LEFT,DOWN,RGHT,TRNS,TRNS,     TRNS,                      \
+        TRNS,     TRNS,TRNS,CALC,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,     CAPS,           TRNS,      \
+        TRNS,TRNS,TRNS,               TRNS,               TRNS,TRNS,TRNS,TRNS,      TRNS,TRNS,TRNS)
+};
+static const uint16_t PROGMEM fn_actions[] = {
+    [0] = ACTION_LAYER_MOMENTARY(1),
+    [1] = ACTION_MACRO(HELLO),
+};
 
 #define KEYMAPS_SIZE    (sizeof(keymaps) / sizeof(keymaps[0]))
 #define FN_ACTIONS_SIZE (sizeof(fn_actions) / sizeof(fn_actions[0]))
@@ -130,6 +159,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* translates key to keycode */
 uint8_t keymap_key_to_keycode(uint8_t layer, keypos_t key)
 {
+    //return keymaps[(layer)][(key.row)][(key.col)];
     if (layer < KEYMAPS_SIZE) {
         return pgm_read_byte(&keymaps[(layer)][(key.row)][(key.col)]);
     } else {
@@ -141,6 +171,7 @@ uint8_t keymap_key_to_keycode(uint8_t layer, keypos_t key)
 /* translates Fn keycode to action */
 action_t keymap_fn_to_action(uint8_t keycode)
 {
+    //return (action_t){ .code = fn_actions[FN_INDEX(keycode)]};
     action_t action;
     if (FN_INDEX(keycode) < FN_ACTIONS_SIZE) {
         action.code = pgm_read_word(&fn_actions[FN_INDEX(keycode)]);
@@ -148,4 +179,15 @@ action_t keymap_fn_to_action(uint8_t keycode)
         action.code = ACTION_NO;
     }
     return action;
+}
+
+const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
+{
+    switch (id) {
+        case HELLO:
+            return (record->event.pressed ?
+                    MACRO( I(0), T(H), T(E), T(L), T(L), W(255), T(O), END ) :
+                    MACRO_NONE );
+    }
+    return MACRO_NONE;
 }
